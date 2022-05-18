@@ -1,4 +1,4 @@
-#Estudiamos ahora la creaciÛn de un modelo por regresiÛn lineal:
+#Estudiamos ahora la creaci√≥n de un modelo por regresi√≥n lineal:
 
 rm(list=ls())
 
@@ -28,7 +28,7 @@ inputt$aleatorio<-runif(nrow(inputt))
 
 inputt$aleatorio2<-runif(nrow(inputt))
 
-#Pasamos el ID a valor numÈrico para que no haya correlaciones con la variable objetivo
+#Pasamos el ID a valor num√©rico para que no haya correlaciones con la variable objetivo
 
 inputt$ID<-as.numeric(inputt$ID)
 
@@ -37,16 +37,16 @@ inputt$ID<-as.numeric(inputt$ID)
 
 graficoVcramer(inputt,varObj) #Me lanca un warning: Chi-squared approximation may be incorrect
 
-unique(inputt$prop_missings) #Al no haber 6 valores diferentes no aparece prop_missings en la relaciÛn
+unique(inputt$prop_missings) #Al no haber 6 valores diferentes no aparece prop_missings en la relaci√≥n
 
-#quiz·s podrÌamos pasarla a variable cualitativa para meterla en el test
+#quiz√°s podr√≠amos pasarla a variable cualitativa para meterla en el test
 
-#Vemos que puede haber una relacion significativa con respecto a la antig¸edad, el contrato, el servicio
+#Vemos que puede haber una relacion significativa con respecto a la antig√ºedad, el contrato, el servicio
 #o el metodo de pago.
 
-#vamos a ver el efecto de algunas variables gr·ficamente:
+#vamos a ver el efecto de algunas variables gr√°ficamente:
 
-m1<-mosaico_targetbinaria(inputt$Contrato,varObj,"Contrato")  #Tablas de contingencias en gr·fico 
+m1<-mosaico_targetbinaria(inputt$Contrato,varObj,"Contrato")  #Tablas de contingencias en gr√°fico 
 m2<-mosaico_targetbinaria(inputt$MetodoPago,varObj,"Pago") 
 m3<-mosaico_targetbinaria(inputt$Int_serv,varObj,"Servicio") 
 
@@ -60,10 +60,10 @@ h2h3<-barras_targetbinaria(inputt$Int_serv,varObj,"Servicio")
 
 marrangeGrob(list(h1,h2,h3,bx1,bx2,bx3),nrow = 3, ncol = 2)
 
-#El cambio de la frecuencia relativa de las categorÌas de cada variable dependiendo de si el cliente se ha fugado
-#o no, indica que estas variables ser·n importantes de cara al modelo y que tendr·n una capacidad predictora
+#El cambio de la frecuencia relativa de las categor√≠as de cada variable dependiendo de si el cliente se ha fugado
+#o no, indica que estas variables ser√°n importantes de cara al modelo y que tendr√°n una capacidad predictora
 
-#Vamos ahora a tramificar las variables contÌnuas para convertirlas en categÛricas:
+#Vamos ahora a tramificar las variables cont√≠nuas para convertirlas en categ√≥ricas:
 
 tree_Factura_Total <-rpart::rpart(varObj~FacturaTotal, data = inputt, cp=0.005)
 tree_Factura_Total
@@ -74,7 +74,7 @@ table(inputt$tree_Factura_Total)
 str(inputt$tree_Factura_Total) #Tipo factor
 
 h4<-barras_targetbinaria(varObj,inputt$tree_Factura_Total,"Factura_Total")
-h4 #No parece tampoco que influya en exceso #CategorÌas muy subrepresentadas
+h4 #No parece tampoco que influya en exceso #Categor√≠as muy subrepresentadas
 
 #No funciona bien la ramificacion para la variable factura_mes
 
@@ -84,12 +84,12 @@ table(tree_Factura_Mes$where)
 
 tree_Ant <-rpart::rpart(varObj~Antig.fc.edad, data = inputt, cp=0.005) 
 tree_Ant
-table(tree_Ant$where) #CategorÌas muy subrepresentadas, no lo incluÌmos
+table(tree_Ant$where) #Categor√≠as muy subrepresentadas, no lo inclu√≠mos
 
-#Busco las mejores transformaciones para las variables num√©ricas con respesto a la variable binaria
-#La relaciÛn se mide por el coeficiente V de Cramer
+#Busco las mejores transformaciones para las variables num√É¬©ricas con respesto a la variable binaria
+#La relaci√≥n se mide por el coeficiente V de Cramer
 #Quitamos la columna de propmissings porque provoca errores al ser continua pero tener solo 4 valores distintos
-#Tenemos que categorizarla m·s adelante
+#Tenemos que categorizarla m√°s adelante
 
 input_binn<-cbind(inputt[,-21],Transf_Auto(Filter(is.numeric, inputt[,-21]),varObj))
 todo_binn<-data.frame(input_binn,varObj)
@@ -109,10 +109,10 @@ freq(todoo$varObj) #Importante tenerlo en cuenta a la hora de valorar el modelo
 # Le pedimos las posiciones de las variables para tener cuidado y saber filtrar
 names(todoo)
 
-#Hago la particiÛn, empezando un modelo de referencia con las variables originales
+#Hago la partici√≥n, empezando un modelo de referencia con las variables originales
 set.seed(123456)
 trainIndexx <- createDataPartition(todoo$varObj, p=0.8, list=FALSE)
-#data_trainn <- todoo[trainIndex,c(3,4,5,6,7,8,10,11,16,17,18,19,20,25,26,27,30)] #V de Cramer m·s importante
+#data_trainn <- todoo[trainIndex,c(3,4,5,6,7,8,10,11,16,17,18,19,20,25,26,27,30)] #V de Cramer m√°s importante
 #data_testt <- todoo[-trainIndex,c(3,4,5,6,7,8,10,11,16,17,18,19,20,25,26,27,30)]
 
 data_trainn <- todoo[trainIndexx,]
@@ -135,11 +135,11 @@ pseudoR2(modeloIniciall,data_trainn,"varObj") #NA muy bajo, hay que mejorar
 pseudoR2(modeloIniciall,data_testt,"varObj")
 modeloIniciall$rank #numero de parametros
 
-#Miramos con respectos a V de Cramer cuales son las variables m·s importantes:
+#Miramos con respectos a V de Cramer cuales son las variables m√°s importantes:
 
 impVariablesLog(modeloIniciall,"varObj") 
 
-#Probamos un modelo sencillo con menos variables: Las que est·n por encima del raiz4aleatorio:
+#Probamos un modelo sencillo con menos variables: Las que est√°n por encima del raiz4aleatorio:
 
 names(data_trainn)
 
@@ -150,9 +150,9 @@ pseudoR2(modelo22,data_trainn,"varObj") #NA muy bajo, hay que mejorar
 pseudoR2(modelo22,data_testt,"varObj")
 modelo22$rank #numero de parametros   
 
-#Hemos bajado el n˙mero de par·metros pero tampoco parece que el modelo haya mejorado en exceso
+#Hemos bajado el n√∫mero de par√°metros pero tampoco parece que el modelo haya mejorado en exceso
 
-#Y probamos otro incluso m·s sencillo, con las 10 m·s improtantes seg˙n Cramer
+#Y probamos otro incluso m√°s sencillo, con las 10 m√°s improtantes seg√∫n Cramer
 
 modelo33<-glm(varObj~Contrato+TV_streaming+Mayor65+MetodoPago
               +Int_serv+VariasLineas+Seguridad+Fact_sinPapel+Telf_serv+raiz4FacturaTotal,
@@ -164,9 +164,9 @@ pseudoR2(modelo33,data_trainn,"varObj") #NA muy bajo, hay que mejorar
 pseudoR2(modelo33,data_testt,"varObj")
 modelo33$rank #numero de parametros
 
-#Empeora un poco el modelo, aunque baja el numero de par·metros
-#Podemos intentar incluir una interaccion. El mÈtodo de pago, por ejemplo, nos gustarÌa que fuese m·s 
-#relevante de lo que es. Quiz·s nos diga algo m·s al cruzarla con el int_serv:
+#Empeora un poco el modelo, aunque baja el numero de par√°metros
+#Podemos intentar incluir una interaccion. El m√©todo de pago, por ejemplo, nos gustar√≠a que fuese m√°s 
+#relevante de lo que es. Quiz√°s nos diga algo m√°s al cruzarla con el int_serv:
 #Cogemos el modelo 22 como base que no funcionaba mal
 
 modelo44<-glm(varObj~Contrato+TV_streaming+Mayor65+Antig.fc.edad+CopiaSeguridad+Soporte_tecnico+Peliculas
@@ -182,8 +182,8 @@ modelo44$rank #numero de parametros
 
 freq(data_trainn$MetodoPago)
 
-#Parece que alguna relacion hay, podrÌamos seguir buscando m·s.
-#Nos molesta que el mÈtodo de pago no estÈ mucho m·s estrellado, que seg˙n Cramer tendrÌa que estarlo
+#Parece que alguna relacion hay, podr√≠amos seguir buscando m√°s.
+#Nos molesta que el m√©todo de pago no est√© mucho m√°s estrellado, que seg√∫n Cramer tendr√≠a que estarlo
 
 #Validacion cruzada repetida para elegir entre todos:
 
@@ -231,7 +231,7 @@ hist_targetbinaria(predict(modelo44, newdata=data_testt,type="response"),data_te
 
 #Los que son 0 los reconoce, pero los que son 1 para nada. En muchas ocasiones le da una probabilidad de 
 #entre 0 y 0.25 a instancias que son 1... Es verdad que hay menos 1's.
-#Si corto por el 0.5 cometerÌa muchos falsos negativos, tendrÌa que echar el punto de corte, un poco m·s
+#Si corto por el 0.5 cometer√≠a muchos falsos negativos, tendr√≠a que echar el punto de corte, un poco m√°s
 #a la izquerda
 
 #probamos dos
@@ -241,7 +241,7 @@ sensEspCorte(modelo44,data_testt,"varObj",0.265,"1")
 #Especificidad: Capacidad de reconocer a los 0's
 #Sensibilidad: Capacidad de reconocer a los 1's
 
-#Hacemos ahora una prueba algo m·s compleja, generando una rejilla con diferentes puntos de corte:
+#Hacemos ahora una prueba algo m√°s compleja, generando una rejilla con diferentes puntos de corte:
 
 posiblesCortes<-seq(0,1,0.01)
 rejilla<-data.frame(t(rbind(posiblesCortes,sapply(posiblesCortes,function(x) sensEspCorte(modelo44,data_testt,"varObj",x,"1")))))
@@ -256,7 +256,7 @@ rejilla$posiblesCortes[which.max(rejilla$Accuracy)]
 sensEspCorte(modelo44,data_testt,"varObj",0.22,"1")  
 sensEspCorte(modelo44,data_testt,"varObj",0.47,"1")
 
-#Es mejor el punto de corte que hicimos probamos a ojo, balancea m·s sensibilidad y especificidad y
+#Es mejor el punto de corte que hicimos probamos a ojo, balancea m√°s sensibilidad y especificidad y
 #encima tiene mas accuracy...
 
 #Evaluamos la estabilidad del modelo a partir de las diferencias en train y test:
@@ -276,13 +276,13 @@ pred_testt<-factor(ifelse(predict(modelo44,data_testt,type = "response")>0.265,1
 table(pred_testt)
 table(data_testt$varObj)
 
-# Matriz de confusi√≥n
+# Matriz de confusi√É¬≥n
 confusionMatrix(pred_testt,data_testt$varObj, positive = '1')
 
-#El modelo es muy malo tiene un P-Value de 0.365, deberÌa ser mucho menor para segurarnos de que el modelo esta
+#El modelo es muy malo tiene un P-Value de 0.365, deber√≠a ser mucho menor para segurarnos de que el modelo esta
 #aportando algo. Los 1's no los distingue practicamente.
 
-#Tenemos un kappa muy bajo tambiÈn, que tomaria valor = 1 si no hubiese ni falsos positivos ni falsos negativos
+#Tenemos un kappa muy bajo tambi√©n, que tomaria valor = 1 si no hubiese ni falsos positivos ni falsos negativos
 
 #Probar con normalizar las variables cuantitativasd
 
