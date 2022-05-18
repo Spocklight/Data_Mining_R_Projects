@@ -13,25 +13,25 @@ datos_test <- readRDS("C:/Users/aleja/OneDrive/Escritorio/R_Data_Mining/FugaClie
 datos_training <- readRDS("C:/Users/aleja/OneDrive/Escritorio/R_Data_Mining/FugaClientes_Training.RDS")
 
 #Vemos que los datos de test contienen todas las variables que los de training, excepto la columa objetivo "Fuga"
-#Adem·s, los ID del test no los encontramos en los datos del training (parece)
+#Adem√°s, los ID del test no los encontramos en los datos del training (parece)
 #Empezaremos a trabajar con el set de training;
 
 str(datos_training)
 
 #Vemos que tenemos solo tres variables numericas (Antiguedad y Facturas) y que nuestra variable onetivo es bin
-#Adem·s parece que todos tienen asignado el tipo correcto de variable (factor/num)
+#Adem√°s parece que todos tienen asignado el tipo correcto de variable (factor/num)
 
 names(datos_training)
 summary(datos_training)
 
-#Podemos ver cÛmo se distribuye el reparto en las categorÌas de una variable cualitativa:
+#Podemos ver c√≥mo se distribuye el reparto en las categor√≠as de una variable cualitativa:
 #En el summary hemos visto que no hay nada raro a priori
 
 questionr::freq(datos_training$MetodoPago)  
 
-#Vamos a inspeccionar ahora gr·ficamente la informaciÛn, buscando valores extraÒos:
-#La funciones dfplot_box y dfplot_his est·n diseÒadas para devolver una lista de boxlots o histogramas de las
-#variables continuas junto con una lista de gr·ficos de barras para las variables discretas
+#Vamos a inspeccionar ahora gr√°ficamente la informaci√≥n, buscando valores extra√±os:
+#La funciones dfplot_box y dfplot_his est√°n dise√±adas para devolver una lista de boxlots o histogramas de las
+#variables continuas junto con una lista de gr√°ficos de barras para las variables discretas
 
 listaGraf <- dfplot_box(datos_training[,-1]) 
 listaHist<- dfplot_his(datos_training[,-1]) 
@@ -39,16 +39,16 @@ listaHist<- dfplot_his(datos_training[,-1])
 gridExtra::marrangeGrob(listaGraf, nrow = 3, ncol = 3)
 gridExtra::marrangeGrob(listaHist, nrow = 3, ncol = 3)
 
-#No vemos nada excesivamente extraÒo. Cabe la pena comentar que la media est· un poco por debajo de la mediana
-#en la factura mensual y con la total ocurre lo contrario. Este ˙ltimo caso tiene sentido, entra gente en 
-#la compaÒÌa que no ha pagado nada histÛricamente y que aumenta la densidad de la variable en la parte
+#No vemos nada excesivamente extra√±o. Cabe la pena comentar que la media est√° un poco por debajo de la mediana
+#en la factura mensual y con la total ocurre lo contrario. Este √∫ltimo caso tiene sentido, entra gente en 
+#la compa√±√≠a que no ha pagado nada hist√≥ricamente y que aumenta la densidad de la variable en la parte
 #baja del eje.
 
 #Estos valores en la factura total que se encuentran un poco alejados del tercer rango
-#intercuartÌlico,no parece que sea sufuciente como para catalogarlos como outliers
+#intercuart√≠lico,no parece que sea sufuciente como para catalogarlos como outliers
 
-#Los missings de variables no conocidas ya est·n como NA
-#Como no vemos errores graves, pasamos a la gestiÛn de Missings y de Outliers:
+#Los missings de variables no conocidas ya est√°n como NA
+#Como no vemos errores graves, pasamos a la gesti√≥n de Missings y de Outliers:
 #Antes es importante separar la variable objetivo de los predictores:
 
 varObj<-datos_training$Fuga
@@ -56,8 +56,8 @@ datos_training<-datos_training[,-21] #Generamos un dataframe excepto las variabl
 datos_training$ID<-as.numeric(datos_training$ID) #Modificamos para que no haya correlacion
 str(datos_training)
 
-#Empezamos buscando los valores atÌpicos de las variables continuas. Para ello usamos Atipicosamissing:
-#øcriterio rangos intercuartilicos/mediana?
+#Empezamos buscando los valores at√≠picos de las variables continuas. Para ello usamos Atipicosamissing:
+#¬øcriterio rangos intercuartilicos/mediana?
 
 sapply(Filter(is.numeric, datos_training),        
        function(x) atipicosAmissing(x)[[2]])/nrow(datos_training)
@@ -69,7 +69,7 @@ sapply(Filter(is.numeric, datos_training),
 outlier.scores <- lofactor(na.omit(Filter(is.numeric, datos_training)), k=20)
 plot(density(outlier.scores))
 
-# Extraemos la posicion de los 5 registros m·s extremos 
+# Extraemos la posicion de los 5 registros m√°s extremos 
 outliers <- order(outlier.scores, decreasing=T)[1:5]
 
 # Me guardo los ID de estos registros para luego
@@ -79,55 +79,55 @@ outliers <- order(outlier.scores, decreasing=T)[1:5]
 # Me guardo los ID de estos registros para luego
 out5$ID -> ID_out5
 
-#Lo comparamos con el valor de las medias y las medianas de esas variables para ver quÈ ocurre
+#Lo comparamos con el valor de las medias y las medianas de esas variables para ver qu√© ocurre
 
 data.frame(t(round(apply(na.omit(Filter(is.numeric, datos_training)),2,mean),3)))
 data.frame(t(round(apply(na.omit(Filter(is.numeric, datos_training)),2,median),3)))
 
-#PodrÌamos pensar que la factura total es baja con respecto a la media, sin embargo,
+#Podr√≠amos pensar que la factura total es baja con respecto a la media, sin embargo,
 #Son datos que no destacan especialmente. Comparamos por ejemplo con las menos facturas mensuales y totales:
 
 datos_training %>% slice_min(FacturaMes)
 datos_training %>% slice_min(FacturaTotal)
 
-#Tiene sentido ademÒas que facturas totales bajas vayam acompaÒadas de pocos aÒos de antiguÎdad.
+#Tiene sentido adem√±as que facturas totales bajas vayam acompa√±adas de pocos a√±os de antigu√´dad.
 #Somos conservadores con los outliers y consideramos que no hay ninguno
 
 #Pasamos ahora a los valores perdidos:
 
-#Busco si existe alg√∫n patr√≥n en los missings, que me pueda ayudar a entenderlos
+#Busco si existe alg√É¬∫n patr√É¬≥n en los missings, que me pueda ayudar a entenderlos
 
 corrplot(cor(is.na(datos_training[colnames(
   datos_training)[colSums(is.na(datos_training))>0]])),method = "ellipse",type = "upper") 
 
 #No parece que haya ninguna relacion entre los missings
-#Estudiamos la proporciÛn de missings que existe en cada variable:
+#Estudiamos la proporci√≥n de missings que existe en cada variable:
 
 prop_missingsVars<-apply(is.na(datos_training),2,mean)
 t<-data.frame(sort(prop_missingsVars*100, decreasing = T))
 names(t)<-"% Missing por Variable"
 t
 
-#La variabe con un porcentaje de missings m·s elevado es el mÈtodo de pago, pero este sÛlo est· en torno
+#La variabe con un porcentaje de missings m√°s elevado es el m√©todo de pago, pero este s√≥lo est√° en torno
 #al 7%, que nos parece un buen porcentaje.
 
-#Estudiamos ahora el porcentaje de missings por observaciÛn:
+#Estudiamos ahora el porcentaje de missings por observaci√≥n:
 
 datos_training$prop_missings<-apply(is.na(datos_training),1,mean) 
 summary(datos_training$prop_missings)
 datos_training %>% arrange(desc(prop_missings)) %>% slice_head(n=5)
 
-#A las instancias a las que le faltan m·s informaciÛn solo les falta un 14% (3 variables como NA)
-#Es un porcentaje m·s que asumible y no necesitaremos eliminar ninguna observaciÛn
+#A las instancias a las que le faltan m√°s informaci√≥n solo les falta un 14% (3 variables como NA)
+#Es un porcentaje m√°s que asumible y no necesitaremos eliminar ninguna observaci√≥n
 
 #Imputamos ahora valores a estos missings para las variables cuantitativas:
-#Lo haremos con la funciÛn ImputacionCuant y lo haremos por aletoriedad, aunque es importante destacar que esta
-#aleatoriedad est· atada a una distibuciÛn de probabilidad determinada, por la variable,
+#Lo haremos con la funci√≥n ImputacionCuant y lo haremos por aletoriedad, aunque es importante destacar que esta
+#aleatoriedad est√° atada a una distibuci√≥n de probabilidad determinada, por la variable,
 #sin ser completamente azarosa
 
 datos_training_al <- copy(datos_training)
 datos_training_avg <- copy(datos_training)   #Guardamos otras copias del dataframe para aplciar 
-datos_training_med <- copy(datos_training)   #distintas funciones a la imputaciÛn de NA'S
+datos_training_med <- copy(datos_training)   #distintas funciones a la imputaci√≥n de NA'S
 
 datos_training_al[,as.vector(which(sapply(datos_training, class)=="numeric"))]<-sapply(
   Filter(is.numeric, datos_training),function(x) ImputacionCuant(x,"aleatorio"))
@@ -137,7 +137,7 @@ datos_training_avg[,as.vector(which(sapply(datos_training, class)=="numeric"))]<
 
 datos_training_med[,as.vector(which(sapply(datos_training, class)=="numeric"))]<-sapply(
   Filter(is.numeric, datos_training),function(x) ImputacionCuant(x,"mediana"))
-#Con las vaiables categÛricas podemos tomar la moda o la variable aleatoria (lo haremos con aleatoria)
+#Con las vaiables categ√≥ricas podemos tomar la moda o la variable aleatoria (lo haremos con aleatoria)
 
 datos_training_al[,as.vector(which(sapply(datos_training, class)=="factor"))]<-sapply(
   Filter(is.factor, datos_training),function(x) ImputacionCuali(x,"aleatorio"))
@@ -159,13 +159,13 @@ datos_training_avg[,as.vector(which(sapply(datos_training, class)=="character"))
 datos_training_med[,as.vector(which(sapply(datos_training, class)=="character"))] <- lapply(
   datos_training[,as.vector(which(sapply(datos_training, class)=="character"))] , factor)
 
-#puede que quede alg˙n missing en las variables cuantitativas:
+#puede que quede alg√∫n missing en las variables cuantitativas:
 
 indx <- apply(datos_training_al, 2, function(x) any(is.na(x) | is.infinite(x)))
 colnames(datos_training_avg)[indx]
 
 #Efectivamente, nos damos cuenta de que quedan NA's
-#Pasamos otra vez la funciÛn:
+#Pasamos otra vez la funci√≥n:
 
 datos_training_al[,as.vector(which(sapply(datos_training, class)=="numeric"))]<-sapply(
   Filter(is.numeric, datos_training_al),function(x) ImputacionCuant(x,"aleatorio"))
@@ -183,18 +183,18 @@ indx <- apply(datos_training_med, 2, function(x) any(is.na(x) | is.infinite(x)))
 colnames(datos_training_med)[indx]
 
 #Tampoco para el indx. Ya no nos quedan 
-#Consideramos que los datos est·n depurados y los guardamos:
+#Consideramos que los datos est√°n depurados y los guardamos:
 
 saveRDS(datos_training_al,"datos_training_al.RDS")    #Podriamos quedarnos con el mejor y aplicarle
 saveRDS(datos_training_avg,"datos_training_avg.RDS")  #la inputacion por moda en lugar de por aleat.
-saveRDS(datos_training_med,"datos_training_med.RDS")  #a las variables categÛricas
+saveRDS(datos_training_med,"datos_training_med.RDS")  #a las variables categ√≥ricas
 
-#A partir de aquÌ seguimos con datos_training_med para ver si mejoramos los resultados obtenidos anteriormente
+#A partir de aqu√≠ seguimos con datos_training_med para ver si mejoramos los resultados obtenidos anteriormente
 
 datos_training_med<-readRDS('C:/Users/aleja/OneDrive/Escritorio/R_Data_Mining/datos_training_med.RDS')
 
-#El contrato est· un poco desbalanceado. Vemos que los contratos mes a mes est·n bastante m·s representados
-#que los de un aÒo o los de dos. Podemos unir estas dos categorÌas en una nueva columna para ver si es
+#El contrato est√° un poco desbalanceado. Vemos que los contratos mes a mes est√°n bastante m√°s representados
+#que los de un a√±o o los de dos. Podemos unir estas dos categor√≠as en una nueva columna para ver si es
 #representativa para el modelo
 
 
@@ -218,7 +218,7 @@ str(datos_training_med)
 
 graficoVcramer(datos_training_med,varObj) 
 
-unique(datos_training_med$prop_missings) #Al no haber 6 valores diferentes no aparece prop_missings en la relaciÛn
+unique(datos_training_med$prop_missings) #Al no haber 6 valores diferentes no aparece prop_missings en la relaci√≥n
 questionr::freq(datos_training_med$prop_missings) 
 
 #Vamos a categorizar la variable entre si no tiene missings o si tiene alguno:
@@ -230,14 +230,14 @@ datos_training_med$prop_missings_cat[datos_training_med$prop_missings_cat == "0"
 datos_training_med$prop_missings_cat <- as.factor(datos_training_med$prop_missings_cat)
 
 
-#Quiz·s esa variable sea de m·s ayuda que la de la proporcion missings
-#Que adem·s la vamos a pasar a factor:
+#Quiz√°s esa variable sea de m√°s ayuda que la de la proporcion missings
+#Que adem√°s la vamos a pasar a factor:
 
 datos_training_med$prop_missings <- as.factor(datos_training_med$prop_missings)
 
-#vamos a ver el efecto de algunas variables gr·ficamente:
+#vamos a ver el efecto de algunas variables gr√°ficamente:
 
-m1<-mosaico_targetbinaria(datos_training_med$Contrato,varObj,"Contrato")  #Tablas de contingencias en gr·fico 
+m1<-mosaico_targetbinaria(datos_training_med$Contrato,varObj,"Contrato")  #Tablas de contingencias en gr√°fico 
 m2<-mosaico_targetbinaria(datos_training_med$MetodoPago,varObj,"Pago") 
 m3<-mosaico_targetbinaria(datos_training_med$Int_serv,varObj,"Servicio") 
 
@@ -251,25 +251,25 @@ h3<-barras_targetbinaria(datos_training_med$Int_serv,varObj,"Servicio")
 
 marrangeGrob(list(h1,h2,h3,bx1,bx2,bx3),nrow = 3, ncol = 2)
 
-#En base a estos gr·ficos, quiz·s tambiÈn podrÌamos probar reduciendo el numero de categorÌas en
-#pago y servicios, estableciendo electronic_check/otros y fibra/otros como categorÌas por
-#mostrar esas dos un mayor n˙mero de fugados (explorar con el plot todas las categorÌas)
+#En base a estos gr√°ficos, quiz√°s tambi√©n podr√≠amos probar reduciendo el numero de categor√≠as en
+#pago y servicios, estableciendo electronic_check/otros y fibra/otros como categor√≠as por
+#mostrar esas dos un mayor n√∫mero de fugados (explorar con el plot todas las categor√≠as)
 
-#Con respecto a las variables continuas observamos que se van m·s las personas que llevan menos tiempo,
+#Con respecto a las variables continuas observamos que se van m√°s las personas que llevan menos tiempo,
 #con una factura mensual mayor y lo que tiene una factura total menor (va de la mano de la edad)
 
-#øNo se est·n pisando un poco la antiguedad y la factura total?
+#¬øNo se est√°n pisando un poco la antiguedad y la factura total?
 
-#El cambio de la frecuencia relativa de las categorÌas de cada variable dependiendo de si el cliente se ha fugado
-#o no, indica que estas variables ser·n importantes de cara al modelo y que tendr·n una capacidad predictora
+#El cambio de la frecuencia relativa de las categor√≠as de cada variable dependiendo de si el cliente se ha fugado
+#o no, indica que estas variables ser√°n importantes de cara al modelo y que tendr√°n una capacidad predictora
 
-#Busco las mejores transformaciones para las variables num√©ricas con respesto a la variable binaria
-#La relaciÛn se mide por el coeficiente V de Cramer
+#Busco las mejores transformaciones para las variables num√É¬©ricas con respesto a la variable binaria
+#La relaci√≥n se mide por el coeficiente V de Cramer
 #Quitamos la columna de propmissings porque provoca errores al ser continua pero tener solo 4 valores distintos
-#Tenemos que categorizarla m·s adelante
+#Tenemos que categorizarla m√°s adelante
 
 data_tavg<-cbind(datos_training_med,Transf_Auto(Filter(is.numeric, datos_training_med),varObj))
 
 #Volvemos a hacer Cramer:
 
-graficoVcramer(data_tavg,varObj)  #-----> Parece que los resultados son mejores en el avg?ø 
+graficoVcramer(data_tavg,varObj)  #-----> Parece que los resultados son mejores en el avg?¬ø 
