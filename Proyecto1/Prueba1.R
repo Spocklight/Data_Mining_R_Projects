@@ -5,12 +5,12 @@ library(dplyr)
 library(data.table)
 library(DT)
 library(rmdformats)
-library(dtplyr)         #Traduce el cód.de dplyr a datatable (mantenemos la legilibilidad y mejoramos velocidad)
+library(dtplyr)         #Traduce el cÃ³d.de dplyr a datatable (mantenemos la legilibilidad y mejoramos velocidad)
 library(microbenchmark)
 library(janitor)
 library(plotly)
 
-### VisualizaciÃ³n de los datos en bruto
+### VisualizaciÃƒÂ³n de los datos en bruto
 #Leemos nuestros datos del set de training con readRDS
 # (Leemos los datos desde formato binario comprimido RDS)
 
@@ -29,13 +29,13 @@ datatable(head(datos,1000), options = list(autoWidth = TRUE, scrollX = TRUE),
           caption = 'Datos Uso de Medios',
           class = 'cell-border stripe nowrap')
 
-#No hay referencia al tiempo en nuestros datos (información estática/caracterización)
+#No hay referencia al tiempo en nuestros datos (informaciÃ³n estÃ¡tica/caracterizaciÃ³n)
 
-# Podemos pedir un cortecito por el valor más alto de una columna:
+# Podemos pedir un cortecito por el valor mÃ¡s alto de una columna:
 
 datos %>% slice_max(Antig.fc.edad)
 
-# Summary para ver un poco la distribuciÃ³n de las variables
+# Summary para ver un poco la distribuciÃƒÂ³n de las variables
 summary(datosMedia$FacturaMes)
 
 #Utilizamos dtplyr para gacer el slice_min (que tarda mucho en dplyr)
@@ -59,20 +59,20 @@ prueba <- microbenchmark::microbenchmark(
 
 ggplot2::autoplot(prueba) #Pues tarda menos dplyr XD
 
-#Preguntas típicas que hay que hacerse: ¿Hay duplicados?
+#Preguntas tÃ­picas que hay que hacerse: Â¿Hay duplicados?
 
 datos_distintos <- datos %>% distinct() #deja solo las filas que son distintas
 
 #En este caso todas nuestras filas son diferentes
 
-#Vamos ahora a agrupar los datos según el método de pago, el numero de cada método y lo guardamos en una 
+#Vamos ahora a agrupar los datos segÃºn el mÃ©todo de pago, el numero de cada mÃ©todo y lo guardamos en una 
 #columna "total", lo ponemos en orden descendente
 
 datos %>% group_by(MetodoPago) %>% summarise(total=n()) %>% arrange(desc(total)) %>% 
 ungroup()->datosMedia_distinct
 
-#De la gente que se ha fugado, agrúpalos por el metodo que han usado para pagar y cuéntalos
-#Los que mas han dejado de pagar son los que pagan con cheque electrónico
+#De la gente que se ha fugado, agrÃºpalos por el metodo que han usado para pagar y cuÃ©ntalos
+#Los que mas han dejado de pagar son los que pagan con cheque electrÃ³nico
 
 datos %>% filter(Fuga == 1) %>% group_by(MetodoPago) %>% count()
 
